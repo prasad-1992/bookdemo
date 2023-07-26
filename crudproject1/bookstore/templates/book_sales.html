@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Sales</title>
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Book Sales</h1>
+    
+    <!-- Search Form -->
+    <form id="searchForm">
+        <input type="text" id="searchInput" placeholder="Search by title or author">
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Chart to display sales trends -->
+    <div style="max-width: 600px;">
+        <canvas id="salesChart"></canvas>
+    </div>
+
+    <!-- Script to handle search and chart rendering -->
+    <script>
+        // Function to perform AJAX search request and update the chart
+        function searchBooks(event) {
+            event.preventDefault();
+            const searchQuery = document.getElementById('searchInput').value;
+
+            fetch(`/api/booksales/search/?q=${encodeURIComponent(searchQuery)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const months = [];
+                    const quantities = [];
+
+                    // Extract data from the API response
+                    data.forEach(bookSale => {
+                        months.push(bookSale.sale_date);
+                        quantities.push(bookSale.quantity);
+                    });
+
+                    // Render the chart using Chart.js
+                    const ctx = document.getElementById('salesChart').getContext('2d');
+                    const salesChart = new Chart(ctx, {
+                        type: 'line', // You can change the chart type to 'bar', 'pie', etc.
+                        data: {
+                            labels: months,
+                            datasets: [{
+                                label: 'Sales Quantity',
+                                data: quantities,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                                fill: false,
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    type: 'time',
+                                    time: {
+                                        unit: 'month'
+                                    },
+                                    distribution: 'linear',
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Attach event listener to the search form
+        document.getElementById('searchForm').addEventListener('submit', searchBooks);
+    </script>
+</body>
+</html>
